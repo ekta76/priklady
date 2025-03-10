@@ -1,0 +1,158 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Spotřeba Demo',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+      ),
+      home: const SpotrebaHomePage(title: 'Spotřeba App'),
+    );
+  }
+}
+
+class SpotrebaHomePage extends StatefulWidget {
+  const SpotrebaHomePage({super.key, required this.title});
+
+  final String title;
+
+  @override
+  State<SpotrebaHomePage> createState() => SpotrebaHomePageState();
+}
+
+class ZaznamOTankovani {
+  final String _datumPridani;
+  final double _cenaZaLitr;
+  final String _poznamky;
+  final double _mnozstviPaliva;
+  final int _stavTachometru;
+
+  ZaznamOTankovani(
+      this._datumPridani,
+      this._mnozstviPaliva,
+      this._stavTachometru,
+      this._cenaZaLitr,
+      this._poznamky
+      );
+}
+
+class SpotrebaHomePageState extends State<SpotrebaHomePage> {
+  final List<ZaznamOTankovani> _seznam = [];
+
+  final TextEditingController _datumPridaniController = TextEditingController();
+  final TextEditingController _mnozstviPalivaController = TextEditingController();
+  final TextEditingController _stavTachometruController = TextEditingController();
+  final TextEditingController _cenaZaLitrController = TextEditingController();
+  final TextEditingController _poznamkyController = TextEditingController();
+
+  void pridejZaznam() {
+    setState(() {
+      String datumPridani = DateFormat('dd-mm-yyyy').format(DateFormat('dd-mm-yyyy').parse(_datumPridaniController.text.trim()));
+      double mnozstviPaliva = double.parse(_mnozstviPalivaController.text.trim());
+      int stavTachometru = int.parse(_stavTachometruController.text.trim());
+      double cenaZaLitr = double.parse(_cenaZaLitrController.text.trim());
+      String poznamky = _poznamkyController.text.trim();
+      _seznam.add(ZaznamOTankovani(datumPridani, mnozstviPaliva, stavTachometru, cenaZaLitr, poznamky));
+    });
+  }
+
+  double prumernaSpotreba = 0.0;
+
+  void vypocitatSpotrebu() {
+    double stavTachometru = double.tryParse(_stavTachometruController.text) ?? 0;
+    double mnozstviPaliva = double.tryParse(_mnozstviPalivaController.text) ?? 0;
+
+    if (stavTachometru > 0 && mnozstviPaliva > 0) {
+      setState(() {
+        prumernaSpotreba = (mnozstviPaliva / (stavTachometru / 100));
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text(widget.title),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            TextField(
+              controller: _datumPridaniController,
+              decoration: const InputDecoration(
+                labelText: 'Datum pridani auta (dd-mm-yyyy)',
+              ),
+              keyboardType: TextInputType.text,
+            ),
+            TextField(
+              controller: _mnozstviPalivaController,
+              decoration: const InputDecoration(
+                labelText: 'Množství paliva (l)',
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            TextField(
+              controller: _stavTachometruController,
+              decoration: const InputDecoration(
+                labelText: 'Stav tachometru (km)',
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            TextField(
+              controller: _cenaZaLitrController,
+              decoration: const InputDecoration(
+                labelText: 'Cena za litr (kč)',
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            TextField(
+              controller: _poznamkyController,
+              decoration: const InputDecoration(
+                labelText: 'Poznámky',
+              ),
+              keyboardType: TextInputType.text,
+            ),
+            ElevatedButton(
+              onPressed: () {
+                pridejZaznam();
+                vypocitatSpotrebu();
+              },
+              child: const Text('Přidej záznam'),
+            ),
+            Text('Průměrná spotřeba vozidla: ${prumernaSpotreba.toStringAsFixed(2)} l/100 km'),
+            Expanded(
+              child: ListView.builder(
+                itemCount: _seznam.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text('Datum přidání: ${_seznam[index]._datumPridani}, Množství paliva: ${_seznam[index]._mnozstviPaliva} l, Tachometr: ${_seznam[index]._stavTachometru} km, Cena za litr: ${_seznam[index]._cenaZaLitr} Kč'),
+                    subtitle: Text('Poznámky: ${_seznam[index]._poznamky}'),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: pridejZaznam,
+        tooltip: 'Přidej záznam',
+        child: const Icon(Icons.add),
+      ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+}
