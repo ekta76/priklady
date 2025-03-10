@@ -1,0 +1,89 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Multi-Value Data Collection App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: DataInputScreen(),
+    );
+  }
+}
+
+class DataInputScreen extends StatefulWidget {
+  @override
+  _DataInputScreenState createState() => _DataInputScreenState();
+}
+
+class _DataInputScreenState extends State<DataInputScreen> {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _valueController = TextEditingController();
+  final List<Map<String, dynamic>> _data = [];
+
+  void _addData() {
+    final String name = _nameController.text;
+    final String valueText = _valueController.text;
+    if (name.isNotEmpty && valueText.isNotEmpty) {
+      final int? value = int.tryParse(valueText);
+      if (value != null) {
+        setState(() {
+          _data.add({'name': name, 'value': value});
+          _nameController.clear();
+          _valueController.clear();
+        });
+      }
+    }
+  }
+
+  int _calculateSum() {
+    return _data.fold(0, (previous, element) => previous + element['value']);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Multi-Value Data Collection App')),
+      body: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _nameController,
+              decoration: InputDecoration(
+                labelText: 'Zadejte název',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 10),
+            TextField(
+              controller: _valueController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: 'Zadejte hodnotu',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: _addData,
+              child: Text('Přidat položku'),
+            ),
+            SizedBox(height: 20),
+            Text('Seznam položek:'),
+            ..._data.map((item) => Text('${item['name']}: ${item['value']}')).toList(),
+            SizedBox(height: 20),
+            Text('Celkový součet: ${_calculateSum()}'),
+          ],
+        ),
+      ),
+    );
+  }
+}
